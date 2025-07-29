@@ -45,9 +45,9 @@
         }
         .navigation-buttons {
             display: flex;
-            justify-content: space-between;
             width: 100%;
             margin-top: 20px;
+            /* La justificación se controlará dinámicamente con JavaScript */
         }
         .btn {
             background-color: #f472b6; /* Rosa más oscuro */
@@ -89,28 +89,6 @@
             border-radius: 10px;
         }
 
-        /* Animación de corazones explotando */
-        .heart-explosion {
-            position: absolute;
-            background-color: #ef4444; /* Rojo */
-            border-radius: 50%;
-            opacity: 0;
-            animation: explode 1s forwards;
-            pointer-events: none; /* Para que no interfieran con clics */
-            z-index: 1000;
-        }
-
-        @keyframes explode {
-            0% {
-                transform: translate(-50%, -50%) scale(0);
-                opacity: 1;
-            }
-            100% {
-                transform: translate(-50%, -50%) scale(2);
-                opacity: 0;
-            }
-        }
-
         /* Estilos para las opciones de cena */
         .dinner-option {
             background-color: #ffe4e6; /* Rosa muy claro */
@@ -136,6 +114,28 @@
             display: block;
             width: 100%;
         }
+
+        /* Animación de explosión para el emoji de corazón */
+        .exploding-emoji {
+            position: absolute;
+            font-size: 0; /* Se ajustará dinámicamente en JS */
+            opacity: 0;
+            animation: explodeEmoji 1.5s forwards; /* Aumenta la duración para un efecto más suave */
+            pointer-events: none;
+            z-index: 1000;
+            line-height: 1; /* Eliminar espacio extra alrededor del emoji */
+        }
+
+        @keyframes explodeEmoji {
+            0% {
+                transform: translate(-50%, -50%) scale(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--end-x), var(--end-y)) scale(2) rotate(720deg); /* Movimiento y rotación aleatorios */
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -146,8 +146,8 @@
             <div class="text-7xl mb-8 heart-icon">❤️</div>
             <p class="text-xl text-gray-700 mb-4">NUESTRA CITA ES EN:</p>
             <p class="text-2xl font-semibold text-pink-500 mb-6">
-                <a href="https://maps.app.goo.gl/CJkWvseWce87mwm89?g_st=ipc" target="_blank" class="text-pink-500 hover:underline">
-                    📍 Palermo
+                <a href="https://maps.app.goo.gl/maps/search/Palermo,+Buenos+Aires" target="_blank" class="text-pink-500 hover:underline">
+                    📍 Palermo, Buenos Aires
                 </a>
             </p>
             <p class="text-lg text-gray-600">¡Te espero con ansias!</p>
@@ -177,7 +177,7 @@
                 </div>
                 <div class="dinner-option">
                     <a href="https://maps.app.goo.gl/unbVQMkkDLgJs9b78?g_st=ipc" target="_blank">
-                        🍔 Opción Bodegón (Hamburguesa)
+                        🍔 Opción Bodegón
                     </a>
                 </div>
             </div>
@@ -206,6 +206,7 @@
         const nextBtn = document.getElementById('nextBtn');
         const giftButton = document.getElementById('giftButton');
         const cardContainer = document.querySelector('.card-container');
+        const navButtonsContainer = document.querySelector('.navigation-buttons');
 
         function showPage(pageNumber) {
             pages.forEach((page, index) => {
@@ -219,6 +220,18 @@
             // Actualizar visibilidad de los botones de navegación
             prevBtn.style.display = pageNumber === 1 ? 'none' : 'block';
             nextBtn.style.display = pageNumber === totalPages ? 'none' : 'block';
+
+            // Ajustar la justificación de los botones
+            if (pageNumber === 1 && nextBtn.style.display === 'block') {
+                // Si es la primera página y solo se muestra 'Siguiente', alinear a la derecha
+                navButtonsContainer.style.justifyContent = 'flex-end';
+            } else if (pageNumber === totalPages && prevBtn.style.display === 'block') {
+                // Si es la última página y solo se muestra 'Anterior', alinear a la derecha
+                navButtonsContainer.style.justifyContent = 'flex-end';
+            } else {
+                // En cualquier otro caso (páginas intermedias o si ambos están visibles), usar space-between
+                navButtonsContainer.style.justifyContent = 'space-between';
+            }
         }
 
         nextBtn.addEventListener('click', () => {
@@ -400,26 +413,41 @@
             }
         });
 
-        // JavaScript para la explosión de corazones
+        // JavaScript para la explosión del emoji de corazón
         giftButton.addEventListener('click', () => {
-            const numHearts = 50; // Cantidad de corazones a explotar
-            for (let i = 0; i < numHearts; i++) {
-                const heart = document.createElement('div');
-                heart.classList.add('heart-explosion'); // Usamos la clase 'heart-explosion'
-                // Posición aleatoria dentro del contenedor de la tarjeta
-                const x = Math.random() * cardContainer.offsetWidth;
-                const y = Math.random() * cardContainer.offsetHeight;
-                heart.style.left = `${x}px`;
-                heart.style.top = `${y}px`;
-                heart.style.width = `${Math.random() * 20 + 10}px`; // Tamaño aleatorio
-                heart.style.height = heart.style.width;
-                heart.style.animationDuration = `${Math.random() * 1 + 0.5}s`; // Duración aleatoria
-                heart.style.animationDelay = `${Math.random() * 0.5}s`; // Retraso aleatorio
-                cardContainer.appendChild(heart);
+            const numExplosions = 50; // Cantidad de emojis a explotar
+            const buttonRect = giftButton.getBoundingClientRect();
+            // Posición del centro del botón respecto al contenedor de la tarjeta
+            const buttonCenterX = buttonRect.left + buttonRect.width / 2 - cardContainer.getBoundingClientRect().left;
+            const buttonCenterY = buttonRect.top + buttonRect.height / 2 - cardContainer.getBoundingClientRect().top;
 
-                // Eliminar el corazón después de la animación
-                heart.addEventListener('animationend', () => {
-                    heart.remove();
+            for (let i = 0; i < numExplosions; i++) {
+                const emojiElement = document.createElement('div');
+                emojiElement.classList.add('exploding-emoji');
+                emojiElement.textContent = '❤️'; // El emoji de corazón
+
+                // Posicionar el emoji inicialmente en el centro del botón (relativo al card-container)
+                emojiElement.style.left = `${buttonCenterX}px`;
+                emojiElement.style.top = `${buttonCenterY}px`;
+
+                // Tamaños aleatorios para los emojis que explotan
+                const size = Math.random() * 40 + 20; // Tamaño entre 20px y 60px
+                emojiElement.style.fontSize = `${size}px`; // Usar font-size para el emoji
+
+                // Definir el punto final aleatorio para la animación
+                const endX = Math.random() * cardContainer.offsetWidth * 1.5 - (cardContainer.offsetWidth * 0.25);
+                const endY = Math.random() * cardContainer.offsetHeight * 1.5 - (cardContainer.offsetHeight * 0.25);
+                emojiElement.style.setProperty('--end-x', `${endX}px`);
+                emojiElement.style.setProperty('--end-y', `${endY}px`);
+
+                emojiElement.style.animationDuration = `${Math.random() * 1.5 + 1}s`; // Duración aleatoria
+                emojiElement.style.animationDelay = `${Math.random() * 0.5}s`; // Retraso aleatorio
+
+                cardContainer.appendChild(emojiElement);
+
+                // Eliminar el emoji después de la animación
+                emojiElement.addEventListener('animationend', () => {
+                    emojiElement.remove();
                 });
             }
         });
